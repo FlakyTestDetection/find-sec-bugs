@@ -1,10 +1,9 @@
-after_success:
-- mvn clean cobertura:cobertura coveralls:report
 before_install:
 - wget https://dl.dropboxusercontent.com/u/7897865/apache-maven-3.3.9.zip
 - unzip -qq apache-maven-3.3.9.zip
 - export M2_HOME=$PWD/apache-maven-3.3.9
 - export PATH=$M2_HOME/bin:$PATH
+# Activate container based infra https://docs.travis-ci.com/user/workers/container-based-infrastructure/
 install: mvn clean -B -V
 jdk:
 - oraclejdk8
