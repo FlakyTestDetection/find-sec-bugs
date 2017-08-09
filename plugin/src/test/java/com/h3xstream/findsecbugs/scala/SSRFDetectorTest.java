@@ -28,10 +28,12 @@ import java.util.Map;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 
 public class SSRFDetectorTest extends BaseDetectorTest {
 
     private static final String SCALA_PLAY_SSRF_TYPE = "SCALA_PLAY_SSRF";
+    private static final String URLCONNECTION_SSRF_FD = "URLCONNECTION_SSRF_FD";
 
     @Test
     public void detectSSRFInController() throws Exception {
@@ -50,8 +52,8 @@ public class SSRFDetectorTest extends BaseDetectorTest {
 
         //Assertions for bugs
         Map<String, int[]> methodBugLines = new HashMap<String, int[]>();
-        methodBugLines.put("vulnerableGet", new int[]{24, 33});
-        methodBugLines.put("vulnerablePost", new int[]{44, 48, 53, /**/ 61, 65, 70});
+        methodBugLines.put("vulnerableGet", new int[]{27, 31, 32, 33, 34, 35, 36, 37, 38, 39, 47});
+        methodBugLines.put("vulnerablePost", new int[]{58, 62, 67, 71, 72, 73, 74, 75, 76, 77, 78, 79, 86, 90, 95});
 
         for (Map.Entry<String, int[]> entry : methodBugLines.entrySet()) {
             // Lets check every line specified above
@@ -90,6 +92,28 @@ public class SSRFDetectorTest extends BaseDetectorTest {
                         .bugType(SCALA_PLAY_SSRF_TYPE)
                         .inClass("SSRFController").inMethod("safePostWithWhitelist")
                         .build()
+        );
+    }
+
+    @Test
+    public void detectURLConnectionSSRF() throws Exception {
+        //Locate test code
+        String[] files = {
+                getClassFilePath("testcode/UrlConnectionSSRF")
+        };
+
+        //Run the analysis
+        EasyBugReporter reporter = spy(new SecurityReporter());
+        analyze(files, reporter);
+
+        //Assertions
+        verify(reporter, times(7)).doReportBug(bugDefinition()
+                .bugType(URLCONNECTION_SSRF_FD).inClass("UrlConnectionSSRF")
+                .inMethod("testURL").build()
+        );
+        verify(reporter, times(1)).doReportBug(bugDefinition()
+                .bugType(URLCONNECTION_SSRF_FD).inClass("UrlConnectionSSRF")
+                .inMethod("testURI").build()
         );
     }
 }
